@@ -1,0 +1,16 @@
+image: alpine/k8s:1.30.0
+
+stages:
+  - build
+
+boutique:
+  stage: build
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  before_script:
+    - mkdir ~/.kube
+    - cat ${ca_pem} > ~/.kube/ca.pem
+    - cat ${otus_kubeconfig} > ~/.kube/config
+  script:
+    - helm upgrade --install boutique app/helm-chart --create-namespace -n app

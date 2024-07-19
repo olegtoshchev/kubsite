@@ -1,0 +1,71 @@
+nodeSelector:
+  infra: "true"
+tolerations:
+  - key: "node-role"        
+    operator: "Equal"
+    value: "infra"        
+    effect: "NoSchedule"
+image.tag: 8.5.28
+
+persistence:
+  type: pvc
+  enabled: true
+
+ingress:
+  enabled: true
+  annotations: 
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: "yc-clusterissuer"
+  tls:
+    - hosts:
+      - grafana.ot.sites.net
+      secretName: domain-name-secret
+  labels: 
+    app: grafana
+  path: /
+  pathType: Prefix
+  hosts:
+    - grafana.ot.sites.net
+  backend:
+    service:
+      port:
+        number: 80
+service:
+  type: ClusterIP
+
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+    - name: Prometheus
+      type: prometheus
+      url: http://boutique-prometheus-kube-p-prometheus.tools.svc.cluster.local:9090
+      access: proxy
+      isDefault: true
+    - name: Loki
+      type: loki
+      url: http://loki-gateway.tools.svc.cluster.local
+
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+    - name: 'default'
+      orgId: 1
+      folder: ''
+      type: file
+      disableDeletion: false
+      editable: true
+      options:
+        path: /var/lib/grafana/dashboards/default
+
+dashboards:
+  default:
+    logs-app:
+      gnetId: 13639
+      revision: 1
+      datasource: Loki
+    node-exporter-prom:
+      gnetId: 15172
+      revision: 1
+      datasource: Prometheus

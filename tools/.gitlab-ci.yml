@@ -1,0 +1,56 @@
+image: alpine/k8s:1.30.0
+
+stages:
+  - build
+
+grafana:
+  stage: build
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  before_script:
+    - mkdir ~/.kube
+    - cat ${ca_pem} > ~/.kube/ca.pem
+    - cat ${otus_kubeconfig} > ~/.kube/config
+    - helm repo add grafana https://grafana.github.io/helm-charts
+  script:
+    - helm upgrade --install boutique-grafana grafana/grafana -f tools/grafana-values.yaml -n tools
+
+loki:
+  stage: build
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  before_script:
+    - mkdir ~/.kube
+    - cat ${ca_pem} > ~/.kube/ca.pem
+    - cat ${otus_kubeconfig} > ~/.kube/config
+    - helm repo add grafana https://grafana.github.io/helm-charts
+  script:
+    - helm upgrade --install --values tools/loki-values.yaml loki --namespace=tools grafana/loki --version 5.47.0
+    - helm upgrade --values tools/promtail-values.yaml --install promtail grafana/promtail -n tools
+
+prometheus:
+  stage: build
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  before_script:
+    - mkdir ~/.kube
+    - cat ${ca_pem} > ~/.kube/ca.pem
+    - cat ${otus_kubeconfig} > ~/.kube/config
+  script:
+    - helm upgrade --install boutique-prometheus -f tools/prometheus-values.yaml -n tools --create-namespace oci://registry-1.docker.io/bitnamicharts/kube-prometheus
+
+polaris:
+  stage: build
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  before_script:
+    - mkdir ~/.kube
+    - cat ${ca_pem} > ~/.kube/ca.pem
+    - cat ${otus_kubeconfig} > ~/.kube/config
+    - helm repo add fairwinds-stable https://charts.fairwinds.com/stable
+  script:
+    - helm upgrade --install polaris fairwinds-stable/polaris -f tools/polaris-values.yaml --namespace tools --create-namespace

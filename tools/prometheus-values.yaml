@@ -1,0 +1,52 @@
+operator:
+  nodeSelector:
+    infra: "true"
+  tolerations:
+  - key: "node-role"        
+    operator: "Equal"
+    value: "infra"        
+    effect: "NoSchedule"
+
+alertmanager:
+  nodeSelector:
+    infra: "true"
+  tolerations:
+  - key: "node-role"        
+    operator: "Equal"
+    value: "infra"        
+    effect: "NoSchedule"
+
+node-exporter:
+  tolerations:
+  - key: "node-role"        
+    operator: "Equal"
+    value: "infra"        
+    effect: "NoSchedule"
+
+kube-state-metrics:
+  nodeSelector:
+    infra: "true"
+  tolerations:
+  - key: "node-role"        
+    operator: "Equal"
+    value: "infra"        
+    effect: "NoSchedule"
+
+prometheus:
+  nodeSelector:
+    infra: "true"
+  tolerations:
+  - key: "node-role"        
+    operator: "Equal"
+    value: "infra"        
+    effect: "NoSchedule"
+  # scrapeConfigNamespaceSelector: app
+
+blackboxExporter:
+  nodeSelector:
+    infra: "true"
+  tolerations:
+  - key: "node-role"        
+    operator: "Equal"
+    value: "infra"        
+    effect: "NoSchedule"

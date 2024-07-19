@@ -1,0 +1,29 @@
+dashboard:
+  nodeSelector:
+    infra: "true"
+  tolerations:
+    - key: "node-role"        
+      operator: "Equal"
+      value: "infra"        
+      effect: "NoSchedule"
+  ingress:
+    enabled: true
+    annotations: 
+      kubernetes.io/ingress.class: nginx
+      cert-manager.io/cluster-issuer: "yc-clusterissuer"
+    tls:
+      - hosts:
+        - ot.sites.net
+        secretName: domain-name-secret
+    labels: 
+      app: polaris
+    path: /
+    pathType: Prefix
+    hosts:
+      - ot.sites.net
+    backend:
+      service:
+        port:
+          number: 80
+  service:
+    type: ClusterIP

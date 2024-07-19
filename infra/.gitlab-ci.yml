@@ -1,0 +1,66 @@
+before_script:
+  - export TF_VAR_AIM_token=${AIM_token}
+  - export TF_VAR_cloud_id=${cloud_id}
+  - export TF_VAR_folder_id=${folder_id}
+  - export TF_VAR_access_key=${access_key}
+  - export TF_VAR_secret_key=${secret_key}
+
+image: 
+  name: hashicorp/terraform:1.8
+  entrypoint: [""]
+
+stages:
+  - validate
+  - plan
+  - deploy
+  - destroy
+
+init:
+  stage: validate
+  rules:
+    - if: '$CI_COMMIT_BRANCH != "main"'
+  script:
+    - cd infra
+    - terraform init -backend-config="access_key=$TF_VAR_access_key" -backend-config="secret_key=$TF_VAR_secret_key"
+    - terraform validate 
+    
+Create plan:
+  stage: plan
+  script:
+    - cd infra
+    - terraform init -backend-config="access_key=$TF_VAR_access_key" -backend-config="secret_key=$TF_VAR_secret_key"  
+    - terraform plan -out=my_favorite_plan -input=false
+  dependencies:
+    - init
+  artifacts:
+    paths:
+    - infra/my_favorite_plan
+    expire_in: 1 hour
+
+apply plan:
+  stage: deploy
+  # если хотим сделать деплой по кнопке
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: manual
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
+  script:
+    - cd infra
+    - terraform init -backend-config="access_key=$TF_VAR_access_key" -backend-config="secret_key=$TF_VAR_secret_key"
+    - terraform apply -auto-approve my_favorite_plan
+  dependencies:
+    - Create plan
+
+destroy:
+  stage: destroy
+  # если хотим сделать дестрой по кнопке
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: manual
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
+  script:
+    - cd infra
+    - terraform init -backend-config="access_key=$TF_VAR_access_key" -backend-config="secret_key=$TF_VAR_secret_key"
+    - terraform destroy -auto-approve
